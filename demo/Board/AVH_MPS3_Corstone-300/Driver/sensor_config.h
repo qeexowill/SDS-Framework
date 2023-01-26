@@ -46,7 +46,7 @@
 #define SENSOR2_DATA_THRESHOLD  0U
 
 // Accelerometer
-#define SENSOR3_NAME            "Accelerometer"
+#define SENSOR3_NAME            "accel"
 #define SENSOR3_DMA_MODE        0U
 #define SENSOR3_SAMPLE_SIZE     6U
 #define SENSOR3_SAMPLE_INTERVAL 9615U
@@ -54,7 +54,7 @@
 #define SENSOR3_DATA_THRESHOLD  0U
 
 // Gyroscope
-#define SENSOR4_NAME            "Gyroscope"
+#define SENSOR4_NAME            "gyro"
 #define SENSOR4_DMA_MODE        0U
 #define SENSOR4_SAMPLE_SIZE     6U
 #define SENSOR4_SAMPLE_INTERVAL 9615U
@@ -62,7 +62,7 @@
 #define SENSOR4_DATA_THRESHOLD  0U
 
 // Magnetometer
-#define SENSOR5_NAME            "Magnetometer"
+#define SENSOR5_NAME            "magno"
 #define SENSOR5_DMA_MODE        0U
 #define SENSOR5_SAMPLE_SIZE     6U
 #define SENSOR5_SAMPLE_INTERVAL 10000U

@@ -34,8 +34,9 @@ int main (void) {
 
   vioInit();                            // Initialize Virtual I/O
 
-  VSI0_Initialize();                    // Initialize VSI0
-  VSI3_Initialize();                    // Initialize VSI3
+  VSI3_Initialize();                    // Initialize VSI3 / accel
+  VSI4_Initialize();                    // Initialize VSI4 / gyro
+  VSI5_Initialize();                    // Initialize VSI5 / magno
 
 #if defined(RTE_Compiler_EventRecorder) && \
     (defined(__MICROLIB) || \
