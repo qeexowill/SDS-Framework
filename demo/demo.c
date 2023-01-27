@@ -28,26 +28,26 @@
 
 // Configuration
 #ifndef SDS_BUF_SIZE_ACCEL
-#define SDS_BUF_SIZE_ACCEL          4096U
+#define SDS_BUF_SIZE_ACCEL          8192U
 #endif
 #ifndef SDS_BUF_SIZE_GYRO
-#define SDS_BUF_SIZE_GYRO           4096U
+#define SDS_BUF_SIZE_GYRO           8192U
 #endif
 #ifndef SDS_BUF_SIZE_MAGNO
-#define SDS_BUF_SIZE_MAGNO          4096U
+#define SDS_BUF_SIZE_MAGNO          8192U
 #endif
 #ifndef SDS_THRESHOLD_ACCEL
-#define SDS_THRESHOLD_ACCEL         128U
+#define SDS_THRESHOLD_ACCEL         6U
 #endif
 #ifndef SDS_THRESHOLD_GYRO
-#define SDS_THRESHOLD_GYRO          128U
+#define SDS_THRESHOLD_GYRO          6U
 #endif
 #ifndef SDS_THRESHOLD_MAGNO
-#define SDS_THRESHOLD_MAGNO         128U
+#define SDS_THRESHOLD_MAGNO         6U
 #endif
 
 #ifndef SENSOR_POLLING_INTERVAL
-#define SENSOR_POLLING_INTERVAL             5U  /* 5ms */
+#define SENSOR_POLLING_INTERVAL             2U  /* 2ms */
 #endif
 
 #ifndef SENSOR_BUF_SIZE
@@ -98,12 +98,15 @@ static __NO_RETURN void read_sensors (void *argument) {
   for (;;) {
     if (sensorGetStatus(sensorId_accel).active != 0U) {
       num = sizeof(sensorBuf) / sensorConfig_accel->sample_size;
+      //printf("%s: Got initial num %d to pass to: sensorReadSamples(%d, %d, %s, %d)\r\n", sensorConfig_accel->name, num, (int)sensorId_accel, num, sensorBuf, sizeof(sensorBuf));
       num = sensorReadSamples(sensorId_accel, num, sensorBuf, sizeof(sensorBuf));
+      //printf("%s: sensorReadSamples return num: %d\r\n", sensorConfig_accel->name, num);
       if (num != 0U) {
         buf_size = num * sensorConfig_accel->sample_size;
+        //printf("%s: About to call sdsWrite(%d, %s, %d) with buf_size=%d from num=%d * sample_size=%d\r\n", sensorConfig_accel->name, (int)sensorId_accel, sensorBuf, buf_size, buf_size, num, sensorConfig_accel->sample_size);
         num = sdsWrite(sdsId_accel, sensorBuf, buf_size);
         if (num != buf_size) {
-          printf("%s: SDS write failed\r\n", sensorConfig_accel->name);
+          printf("%s: SDS write failed buf_size=%d, num=%d\r\n", sensorConfig_accel->name, buf_size, num);
         }
       }
     }
@@ -115,7 +118,7 @@ static __NO_RETURN void read_sensors (void *argument) {
         buf_size = num * sensorConfig_gyro->sample_size;
         num = sdsWrite(sdsId_gyro, sensorBuf, buf_size);
         if (num != buf_size) {
-          printf("%s: SDS write failed\r\n", sensorConfig_gyro->name);
+          printf("%s: SDS write failed buf_size=%d num=%d\r\n", sensorConfig_gyro->name, buf_size, num);
         }
       }
     }
@@ -127,7 +130,7 @@ static __NO_RETURN void read_sensors (void *argument) {
         buf_size = num * sensorConfig_magno->sample_size;
         num = sdsWrite(sdsId_magno, sensorBuf, buf_size);
         if (num != buf_size) {
-          printf("%s: SDS write failed\r\n", sensorConfig_magno->name);
+          printf("%s: SDS write failed buf_size=%d num=%d\r\n", sensorConfig_magno->name, buf_size, num);
         }
       }
     }
@@ -249,6 +252,8 @@ void __NO_RETURN demo(void) {
           printf("magno disabled\r\n");
         }
 
+      }
+
       // Accelerometer data event
       if ((flags & EVENT_DATA_ACCEL) != 0U) {
 
@@ -260,7 +265,10 @@ void __NO_RETURN demo(void) {
           }
         }
       }
-      for (n = 0U; n < (SDS_THRESHOLD_GYRO / sensorConfig_gyro->sample_size); n++) {
+
+      // Gyro data event
+      if ((flags & EVENT_DATA_GYRO) != 0U) {
+        for (n = 0U; n < (SDS_THRESHOLD_GYRO / sensorConfig_gyro->sample_size); n++) {
           num = sdsRead(sdsId_gyro, buf, sensorConfig_gyro->sample_size);
           if (num == sensorConfig_gyro->sample_size) {
             printf("%s: x=%i, y=%i, z=%i\r\n",sensorConfig_gyro->name,
@@ -268,7 +276,9 @@ void __NO_RETURN demo(void) {
           }
         }
       }
-      for (n = 0U; n < (SDS_THRESHOLD_MAGNO / sensorConfig_magno->sample_size); n++) {
+      // Magno data event.
+      if ((flags & EVENT_DATA_MAGNO) != 0U) {
+        for (n = 0U; n < (SDS_THRESHOLD_MAGNO / sensorConfig_magno->sample_size); n++) {
           num = sdsRead(sdsId_magno, buf, sensorConfig_magno->sample_size);
           if (num == sensorConfig_magno->sample_size) {
             printf("%s: x=%i, y=%i, z=%i\r\n",sensorConfig_magno->name,
