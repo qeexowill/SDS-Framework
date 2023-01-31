@@ -47,7 +47,7 @@
 #endif
 
 #ifndef SENSOR_POLLING_INTERVAL
-#define SENSOR_POLLING_INTERVAL             2U  /* 2ms */
+#define SENSOR_POLLING_INTERVAL             1U  /* 1ms */
 #endif
 
 #ifndef SENSOR_BUF_SIZE
