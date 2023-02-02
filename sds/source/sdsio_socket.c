@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Arm Limited. All rights reserved.
+ * Copyright (c) 2022-2023 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#ifdef SDSIO_LOCK_FUNCTIONS
+#ifndef SDSIO_NO_LOCK
 #include "cmsis_os2.h"
 #endif
 #include "iot_socket.h"
@@ -55,7 +55,7 @@ typedef struct {
 static int32_t  socket        = -1;
 
 // Lock function
-#ifdef SDSIO_LOCK_FUNCTIONS
+#ifndef SDSIO_NO_LOCK
 static osMutexId_t lock_id;
 static inline void sdsioLockCreate (void) {
   lock_id = osMutexNew(NULL);

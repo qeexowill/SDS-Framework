@@ -100,4 +100,5 @@ layer:
         - file: ./arduino.c
         - file: ./retarget_stdio.c
         - file: ./Driver/sensor_drv_hw.c
+        - file: ./Driver/ism330dhcx_fifo.c
         - file: ../../../sensor/source/sensor_drv.c

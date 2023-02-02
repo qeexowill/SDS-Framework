@@ -16,7 +16,7 @@ the YAML file listed after the `-y` flag.
 
 ## Set-up and requirements
 ### Requirements
-- Python 3.10+ with packages:
+- Python 3.9 or later with packages:
   - pyyaml
   - numpy
   - matplotlib

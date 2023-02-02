@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Arm Limited. All rights reserved.
+ * Copyright (c) 2022-2023 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -51,7 +51,7 @@
 #endif
 
 #ifndef SENSOR_BUF_SIZE
-#define SENSOR_BUF_SIZE                     6U
+#define SENSOR_BUF_SIZE                     8192U
 #endif
 
 // Sensor identifiers
@@ -77,9 +77,12 @@ static uint8_t sdsBuf_magno[SDS_BUF_SIZE_MAGNO];
 // Temporary sensor buffer
 static uint8_t sensorBuf[SENSOR_BUF_SIZE];
 
+// Sensor close flag
+static uint8_t close_flag = 0U;
+
 // Thread identifiers
-static osThreadId_t thrId_demo         = NULL;
-static osThreadId_t thrId_read_sensors = NULL;
+static osThreadId_t thrId_demo           = NULL;
+static osThreadId_t thrId_read_sensors   = NULL;
 
 #define EVENT_DATA_ACCEL       (1U << 0)
 #define EVENT_DATA_GYRO        (1U << 1)

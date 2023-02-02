@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Arm Limited. All rights reserved.
+ * Copyright (c) 2022-2023 Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -24,8 +24,14 @@
 #include "b_u585i_iot02a_env_sensors.h"
 #include "b_u585i_iot02a_motion_sensors.h"
 
+#include "ism330dhcx_fifo.h"
+
+extern ISM330DHCX_Object_t ISM330DHCX_Obj;
+
 #ifndef SENSOR_NO_LOCK
 #include "cmsis_os2.h"
+
+static uint8_t ISM330DHCX_ActiveFlags = 0U;
 
 // Mutex lock
 static osMutexId_t lock_id  = NULL;
@@ -255,12 +261,20 @@ sensorDrvHW_t sensorDrvHW_2 = {
 // Accelerometer
 
 static int32_t Accelerometer_Enable (void) {
+  uint8_t sample[6];
   int32_t ret = SENSOR_ERROR;
 
   sensorLockCreate();
   sensorLock();
-  if (BSP_MOTION_SENSOR_Enable(0, MOTION_ACCELERO) == BSP_ERROR_NONE) {
-    ret = SENSOR_OK;
+  if (ISM330DHCX_FIFO_Init(ISM330DHCX_ID_ACCELEROMETER) == 0) {
+    if (ISM330DHCX_ActiveFlags == 0U) {
+      // Clear ISM330DHCX FIFO
+      while (ISM330DHCX_FIFO_Read(ISM330DHCX_ID_ACCELEROMETER, 1, sample) != 0U);
+    }
+    if (ISM330DHCX_ACC_Enable(&ISM330DHCX_Obj) == 0) {
+      ISM330DHCX_ActiveFlags |= (1U << ISM330DHCX_ID_ACCELEROMETER);
+      ret = SENSOR_OK;
+    }
   }
   sensorUnLock();
 
@@ -271,8 +285,11 @@ static int32_t Accelerometer_Disable (void) {
   int32_t ret = SENSOR_ERROR;
 
   sensorLock();
-  if (BSP_MOTION_SENSOR_Disable(0, MOTION_ACCELERO) == BSP_ERROR_NONE) {
-    ret = SENSOR_OK;
+  if (ISM330DHCX_ACC_Disable(&ISM330DHCX_Obj) == 0) {
+    if (ISM330DHCX_FIFO_Uninit(ISM330DHCX_ID_ACCELEROMETER) == 0) {
+      ISM330DHCX_ActiveFlags &= ~(1U << ISM330DHCX_ID_ACCELEROMETER);
+      ret = SENSOR_OK;
+    }
   }
   sensorUnLock();
   sensorLockDelete();
@@ -285,21 +302,10 @@ static uint32_t Accelerometer_GetOverflow (void) {
 }
 
 static uint32_t Accelerometer_ReadSamples (uint32_t num_samples, void *buf) {
-  uint32_t num = 0U;
-  int32_t  ret;
-  uint8_t  stat;
-  BSP_MOTION_SENSOR_AxesRaw_t axes;
-
-  (void)num_samples;
+  uint32_t num;
 
   sensorLock();
-  ret = ISM330DHCX_ACC_Get_DRDY_Status(Motion_Sensor_CompObj[0], &stat);
-  if ((ret == 0) && (stat != 0U)) {
-    if (BSP_MOTION_SENSOR_GetAxesRaw(0, MOTION_ACCELERO, &axes) == BSP_ERROR_NONE) {
-      memcpy(buf, &axes, sizeof(BSP_MOTION_SENSOR_AxesRaw_t));
-      num = 1U;
-    }
-  }
+  num = ISM330DHCX_FIFO_Read(ISM330DHCX_ID_ACCELEROMETER, num_samples, buf);
   sensorUnLock();
 
   return num;
@@ -318,12 +324,20 @@ sensorDrvHW_t sensorDrvHW_3 = {
 // Gyroscope
 
 static int32_t Gyroscope_Enable (void) {
+  uint8_t sample[6];
   int32_t ret = SENSOR_ERROR;
 
   sensorLockCreate();
   sensorLock();
-  if (BSP_MOTION_SENSOR_Enable(0, MOTION_GYRO) == BSP_ERROR_NONE) {
-    ret = SENSOR_OK;
+  if (ISM330DHCX_FIFO_Init(ISM330DHCX_ID_GYROSCOPE) == 0) {
+    if (ISM330DHCX_ActiveFlags == 0U) {
+      // Clear ISM330DHCX FIFO
+      while (ISM330DHCX_FIFO_Read(ISM330DHCX_ID_GYROSCOPE, 1, sample) != 0U);
+    }
+    if (ISM330DHCX_GYRO_Enable(&ISM330DHCX_Obj) == 0) {
+      ISM330DHCX_ActiveFlags |= (1U << ISM330DHCX_ID_GYROSCOPE);
+      ret = SENSOR_OK;
+    }
   }
   sensorUnLock();
 
@@ -335,7 +349,10 @@ static int32_t Gyroscope_Disable (void) {
 
   sensorLock();
   if (BSP_MOTION_SENSOR_Disable(0, MOTION_GYRO) == BSP_ERROR_NONE) {
-    ret = SENSOR_OK;
+    if (ISM330DHCX_FIFO_Uninit(ISM330DHCX_ID_GYROSCOPE) == 0) {
+      ISM330DHCX_ActiveFlags &= ~(1U << ISM330DHCX_ID_GYROSCOPE);
+      ret = SENSOR_OK;
+    }
   }
   sensorUnLock();
   sensorLockDelete();
@@ -348,21 +365,10 @@ static uint32_t Gyroscope_GetOverflow (void) {
 }
 
 static uint32_t Gyroscope_ReadSamples (uint32_t num_samples, void *buf) {
-  uint32_t num = 0U;
-  int32_t  ret;
-  uint8_t  stat;
-  BSP_MOTION_SENSOR_AxesRaw_t axes;
-
-  (void)num_samples;
+  uint32_t num;
 
   sensorLock();
-  ret = ISM330DHCX_GYRO_Get_DRDY_Status(Motion_Sensor_CompObj[0], &stat);
-  if ((ret == 0) && (stat != 0U)) {
-    if (BSP_MOTION_SENSOR_GetAxesRaw(0, MOTION_GYRO, &axes) == BSP_ERROR_NONE) {
-      memcpy(buf, &axes, sizeof(BSP_MOTION_SENSOR_AxesRaw_t));
-      num = 1U;
-    }
-  }
+  num = ISM330DHCX_FIFO_Read(ISM330DHCX_ID_GYROSCOPE, num_samples, buf);
   sensorUnLock();
 
   return num;

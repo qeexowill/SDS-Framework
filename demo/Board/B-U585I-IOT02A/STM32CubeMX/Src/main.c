@@ -34,6 +34,9 @@
 
 #include "b_u585i_iot02a_env_sensors.h"
 #include "b_u585i_iot02a_motion_sensors.h"
+#include "ism330dhcx.h"
+
+ISM330DHCX_Object_t ISM330DHCX_Obj;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,7 +54,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- MDF_HandleTypeDef AdfHandle0;
+MDF_HandleTypeDef AdfHandle0;
 MDF_FilterConfigTypeDef AdfFilterConfig0;
 
 I2C_HandleTypeDef hi2c1;
@@ -101,6 +104,13 @@ static void MX_UCPD1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+extern int32_t BSP_I2C2_Init(void);
+extern int32_t BSP_I2C2_DeInit(void);
+extern int32_t BSP_I2C2_WriteReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+extern int32_t BSP_I2C2_ReadReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+extern int32_t BSP_GetTick(void);
+
 /**
   * Override default HAL_GetTick function
   */
@@ -153,6 +163,8 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
   * BSP Sensor Init
   */
 void BSP_SENSOR_Init (void) {
+  ISM330DHCX_IO_t IOCtx;
+
   BSP_ENV_SENSOR_Init(0U, ENV_TEMPERATURE);
   BSP_ENV_SENSOR_Init(0U, ENV_HUMIDITY);
   BSP_ENV_SENSOR_Init(1U, ENV_PRESSURE);
@@ -165,6 +177,27 @@ void BSP_SENSOR_Init (void) {
   BSP_MOTION_SENSOR_Disable(0U, MOTION_ACCELERO);
   BSP_MOTION_SENSOR_Disable(0U, MOTION_GYRO);
   BSP_MOTION_SENSOR_Disable(1U, MOTION_MAGNETO);
+
+  IOCtx.BusType     = ISM330DHCX_I2C_BUS;
+  IOCtx.Address     = ISM330DHCX_I2C_ADD_H;
+  IOCtx.Init        = BSP_I2C2_Init;
+  IOCtx.DeInit      = BSP_I2C2_DeInit;
+  IOCtx.ReadReg     = BSP_I2C2_ReadReg;
+  IOCtx.WriteReg    = BSP_I2C2_WriteReg;
+  IOCtx.GetTick     = BSP_GetTick;
+
+  ISM330DHCX_RegisterBusIO (&ISM330DHCX_Obj, &IOCtx);
+  ISM330DHCX_Init(&ISM330DHCX_Obj);
+
+  ISM330DHCX_ACC_SetFullScale(&ISM330DHCX_Obj, ISM330DHCX_2g);
+  ISM330DHCX_ACC_SetOutputDataRate(&ISM330DHCX_Obj, 1666.0f);
+  ISM330DHCX_FIFO_ACC_Set_BDR(&ISM330DHCX_Obj, 1666.0f);
+
+  ISM330DHCX_GYRO_SetFullScale(&ISM330DHCX_Obj, ISM330DHCX_2000dps);
+  ISM330DHCX_GYRO_SetOutputDataRate(&ISM330DHCX_Obj, 1666.0f);
+  ISM330DHCX_FIFO_GYRO_Set_BDR(&ISM330DHCX_Obj, 1666.0f);
+
+  ISM330DHCX_FIFO_Set_Mode(&ISM330DHCX_Obj, ISM330DHCX_STREAM_MODE);
 }
 
 /* USER CODE END 0 */

@@ -39,8 +39,8 @@ class RecordManager:
     def __getRecord(self, file):
         record = bytearray(file.read(self.HEADER_SIZE))
         if len(record) == self.HEADER_SIZE:
-            timestamp = struct.unpack("i", record[:self.TIMESTAMP_SIZE])[0]
-            data_size = struct.unpack("i", record[self.TIMESTAMP_SIZE:])[0]
+            timestamp = struct.unpack("I", record[:self.TIMESTAMP_SIZE])[0]
+            data_size = struct.unpack("I", record[self.TIMESTAMP_SIZE:])[0]
             self.data.extend(bytearray(file.read(data_size)))
             return True
         else:
@@ -56,22 +56,23 @@ class RecordManager:
 
 # Convert C style data type to Python style
 def getDataType(data_type):
-    match data_type:
-        case "int16_t":
-            return "h"
-        case "uint16_t":
-            return "H"
-        case "int32_t":
-            return "i"
-        case "uint32_t":
-            return "I"
-        case "float":
-            return "f"
-        case "double":
-            return "d"
-        case _:
-            print(f"Unknown data type: {data_type}\n")
-            return None
+    if   data_type == "int16_t":
+        d_type = "h"
+    elif data_type == "uint16_t":
+        d_type = "H"
+    elif data_type == "int32_t":
+        d_type = "i"
+    elif data_type == "uint32_t":
+        d_type = "I"
+    elif data_type == "float":
+        d_type = "f"
+    elif data_type == "double":
+        d_type = "d"
+    else:
+        print(f"Unknown data type: {data_type}\n")
+        d_type = "I"
+
+    return d_type
 
 # Open SDS data file in read mode
 def openFile(file_name):
@@ -137,9 +138,7 @@ def plotData(all_data, data_desc, freq, title):
         # Generate timestamps using number of data points and sampling frequency
         t = np.arange(0, len(data) / freq, 1 / freq)
         if len(t) > len(data):
-            # We ended up with some odd round-off on the number of data points
-            # truncate timestamps back down to match the number of data points 
-            # so Matplotlib works.
+            # Truncate timestamps to match the number of data points
             t = t[0:len(data)]
         plt.plot(t, scaled_data, label=desc["value"])
 

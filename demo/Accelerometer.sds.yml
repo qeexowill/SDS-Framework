@@ -1,20 +1,17 @@
 sds:
   name: Accelerometer
-  description: Accelerometer with 104Hz sample rate
-  frequency: 104
+  description: Accelerometer with 1667Hz sample rate
+  frequency: 1667
   content:
   - value: x
-    type: uint16_t
+    type: int16_t
     scale: 0.000061
     unit: G
-    offset: -2
   - value: y
-    type: uint16_t
+    type: int16_t
     scale: 0.000061
     unit: G
-    offset: -2
   - value: z
-    type: uint16_t
+    type: int16_t
     scale: 0.000061
     unit: G
-    offset: -2

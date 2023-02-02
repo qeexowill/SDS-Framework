@@ -62,8 +62,8 @@ extern "C" {
 #define BSP_CAMERA_IT_PRIORITY        14U  /* Default is lowest priority level */
 
 /* I2C1 and I2C2 Frequencies in Hz  */
-#define BUS_I2C1_FREQUENCY                   100000UL /* Frequency of I2C1 = 100 KHz*/
-#define BUS_I2C2_FREQUENCY                   100000UL /* Frequency of I2C2 = 100 KHz*/
+#define BUS_I2C1_FREQUENCY                   400000UL /* Frequency of I2C1 = 400 KHz*/
+#define BUS_I2C2_FREQUENCY                   400000UL /* Frequency of I2C2 = 400 KHz*/
 
 /* Usage of USBPD PWR TRACE system */
 #define USE_BSP_USBPD_PWR_TRACE       0U      /* USBPD BSP trace system is disabled */
