@@ -19,8 +19,10 @@ project:
     - ../sds/include
 
   components:
+    - component: ARM::CMSIS:DSP&Source
     - component: ARM::CMSIS:RTOS2:Keil RTX5&Source
 
+  
   groups:
     - group: Documentation
       files: 

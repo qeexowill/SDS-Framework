@@ -21,6 +21,9 @@
 #include "cmsis_vio.h"
 #include "cmsis_os2.h"
 
+#include "arm_math.h"
+#include "arm_const_structs.h"
+
 #include "sds.h"
 #ifdef RECORDER_ENABLED
 #include "sds_rec.h"
@@ -137,8 +140,12 @@ static __NO_RETURN void read_sensors (void *argument) {
   uint32_t timestamp;
   uint8_t  event_close_sent = 0U;
   (void)   argument;
+  float32_t test_cfft_32[64];
 
   timestamp = osKernelGetTickCount();
+  // Test running arm_cfft_f32, following line will compile, but not link.
+  arm_cfft_f32(&arm_cfft_sR_f32_len16, test_cfft_32, 0, 1);
+
   for (;;) {
     if (close_flag == 0U) {
       event_close_sent = 0U;
