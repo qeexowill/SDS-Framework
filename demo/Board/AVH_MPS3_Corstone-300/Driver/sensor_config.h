@@ -50,7 +50,7 @@
 #define SENSOR3_DMA_MODE        0U
 #define SENSOR3_SAMPLE_SIZE     6U
 #define SENSOR3_SAMPLE_INTERVAL 2398U
-#define SENSOR3_FIFO_SIZE       6U
+#define SENSOR3_FIFO_SIZE       48U
 #define SENSOR3_DATA_THRESHOLD  0U
 
 // Gyroscope
@@ -58,7 +58,7 @@
 #define SENSOR4_DMA_MODE        0U
 #define SENSOR4_SAMPLE_SIZE     6U
 #define SENSOR4_SAMPLE_INTERVAL 2398U
-#define SENSOR4_FIFO_SIZE       6U
+#define SENSOR4_FIFO_SIZE       48U
 #define SENSOR4_DATA_THRESHOLD  0U
 
 // Magnetometer
@@ -66,7 +66,7 @@
 #define SENSOR5_DMA_MODE        0U
 #define SENSOR5_SAMPLE_SIZE     6U
 #define SENSOR5_SAMPLE_INTERVAL 10000U
-#define SENSOR5_FIFO_SIZE       6U
+#define SENSOR5_FIFO_SIZE       48U
 #define SENSOR5_DATA_THRESHOLD  0U
 
 #endif /* SENSOR_CONFIG_H */
