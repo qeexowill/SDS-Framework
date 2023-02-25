@@ -20,6 +20,8 @@ project:
 
   components:
     - component: ARM::CMSIS:RTOS2:Keil RTX5&Source
+    - component: ARM::CMSIS:DSP&Source
+
 
   groups:
     - group: Documentation
@@ -34,7 +36,15 @@ project:
         - file: ../sds/source/sds.c
         - file: ../sds/source/sds_rec.c
         - file: ../sds/source/sdsio_socket.c
-
+    - group: qeexo
+      files:
+        - file: ./Qeexo/QxAutoMLInf.c
+        - file: ./Qeexo/QxAutoMLSensorConfigs.c
+        - file: ./Qeexo/QxClassifyEngine.c
+        - file: ./Qeexo/predict.c
+        - file: ./Qeexo/qxo_features.c
+        - file: ./Qeexo/fastmath.c
+        - file: ./Qeexo/mfccdata.c
   # requires-layers:
   #   - Board
 
