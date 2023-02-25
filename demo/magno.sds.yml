@@ -1,0 +1,14 @@
+sds:
+  name: magno
+  description: Magnotometer stream with 417Hz target sampling rate
+  frequency: 100
+  content:
+    - value: x
+      type: int16_t
+      unit: gauss
+    - value: y
+      type: int16_t
+      unit: gauss
+    - value: z
+      type: int16_t
+      unit: gauss

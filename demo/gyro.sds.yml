@@ -1,0 +1,14 @@
+sds:
+  name: gyro
+  description: Gyroscope stream with 417Hz target sampling rate
+  frequency: 417
+  content:
+    - value: x
+      type: int16_t
+      unit: dps (degrees per second)
+    - value: y
+      type: int16_t
+      unit: dps (degrees per second)
+    - value: z
+      type: int16_t
+      unit: dps (degrees per second)

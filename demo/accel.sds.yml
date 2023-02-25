@@ -1,0 +1,14 @@
+sds:
+  name: accel
+  description: Accelerometer stream with 417Hz target sampling rate
+  frequency: 417
+  content:
+    - value: x
+      type: int16_t
+      unit: g (meters per sec^2)
+    - value: y
+      type: int16_t
+      unit: g (meters per sec^2)
+    - value: z
+      type: int16_t
+      unit: g (meters per sec^2)

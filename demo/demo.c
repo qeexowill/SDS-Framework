@@ -108,24 +108,49 @@ static osThreadId_t thrId_read_sensors   = NULL;
 #define EVENT_CLOSE                     (1U << 0)
 
 
-// Button thread
-static __NO_RETURN void button (void *argument) {
-  uint32_t value, value_last = 0U;
+// Read sensor thread
+static __NO_RETURN void read_sensors (void *argument) {
+  uint32_t num, buf_size;
+  uint32_t timestamp;
+  uint8_t  event_close_sent = 0U;
   (void)   argument;
 
+  timestamp = osKernelGetTickCount();
   for (;;) {
-    // Monitor user button
-    value = vioGetSignal(vioBUTTON0);
-    if (value != value_last) {
-      value_last = value;
-      if (value == vioBUTTON0) {
-        // Button pressed
-        osThreadFlagsSet(thrId_demo, EVENT_BUTTON);
+
+    // Collect sensor data.
+    if (sensorGetStatus(sensorId_accel).active != 0U) {
+      num = sizeof(sensorBuf) / sensorConfig_accel->sample_size;
+      num = sensorReadSamples(sensorId_accel, num, sensorBuf, sizeof(sensorBuf));
+      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
+        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_accel->sample_size * num);
+        QxFillSensorData(QXSENSOR_TYPE_ACCEL, sensorAxesBuf, num * sensorConfig_accel->sample_size);
       }
     }
-    osDelay(100U);
+
+    if (sensorGetStatus(sensorId_gyro).active != 0U) {
+      num = sizeof(sensorBuf) / sensorConfig_gyro->sample_size;
+      num = sensorReadSamples(sensorId_gyro, num, sensorBuf, sizeof(sensorBuf));
+      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
+        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_gyro->sample_size * num);
+        QxFillSensorData(QXSENSOR_TYPE_GYRO, sensorAxesBuf, num * sensorConfig_gyro->sample_size);
+      }
+    }
+
+    if (sensorGetStatus(sensorId_magno).active != 0U) {
+      num = sizeof(sensorBuf) / sensorConfig_magno->sample_size;
+      num = sensorReadSamples(sensorId_magno, num, sensorBuf, sizeof(sensorBuf));
+      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
+        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_magno->sample_size * num);
+        QxFillSensorData(QXSENSOR_TYPE_MAG, sensorAxesBuf, num * sensorConfig_magno->sample_size);
+      }
+    }
+
+    timestamp += SENSOR_POLLING_INTERVAL;
+    osDelayUntil(timestamp);
   }
 }
+
 
 // SDS event callback
 static void sds_event_callback (sdsId_t id, uint32_t event, void *arg) {
@@ -144,48 +169,6 @@ static void sds_event_callback (sdsId_t id, uint32_t event, void *arg) {
   }
 }
 
-// button_event
-static void button_event (void) {
-         uint32_t flags;
-  static uint8_t  active = 0U;
-
-  if (active == 0U) {
-    active = 1U;
-    // Accelerometer enable
-    sdsClear(sdsId_accel);
-    sensorEnable(sensorId_accel);
-    printf("accel enabled\r\n");
-
-    // Gyroscope enable
-    sdsClear(sdsId_gyro);
-    sensorEnable(sensorId_gyro);
-    printf("gyro enabled\r\n");
-
-    // Magnetometer sensor enable
-    sdsClear(sdsId_magno);
-    sensorEnable(sensorId_magno);
-    printf("magno enabled\r\n");
-  } else {
-    close_flag = 1U;
-    flags = osThreadFlagsWait(EVENT_CLOSE, osFlagsWaitAny, 1000U);
-    if ((flags & osFlagsError) == 0U) {
-      active = 0U;
-
-      // Accelerometer disable
-      sensorDisable(sensorId_accel);
-      printf("accel disabled\r\n");
-
-      // Gyroscope disable
-      sensorDisable(sensorId_gyro);
-      printf("gyro disabled\r\n");
-
-      // Magnetometer sensor disable
-      sensorDisable(sensorId_magno);
-      printf("magno disabled\r\n");
-    }
-    close_flag = 0U;
-  }
-}
 
 const char *qx_predict_classes[] = {"REST", "SHAKE", "WAVE"};
 
@@ -227,11 +210,22 @@ void __NO_RETURN demo(void) {
   sdsRegisterEvents(sdsId_gyro,      sds_event_callback, SDS_EVENT_DATA_HIGH, NULL);
   sdsRegisterEvents(sdsId_magno,     sds_event_callback, SDS_EVENT_DATA_HIGH, NULL);
 
-  // Create button thread
-  osThreadNew(button, NULL, NULL);
+  // Create sensor thread
+  thrId_read_sensors = osThreadNew(read_sensors, NULL, NULL);
+  // Give some time for the sensor reading thread to get started.
+  timestamp = osKernelGetTickCount();
+  last_pred_ts = timestamp;
+  timestamp += SENSOR_POLLING_INTERVAL;
+  osDelayUntil(timestamp);
 
   // Get things enabled right at the start, give us some time to start collecting data.
-  button_event();
+  sdsClear(sdsId_accel);
+  sensorEnable(sensorId_accel);
+  sdsClear(sdsId_gyro);
+  sensorEnable(sensorId_gyro);
+  sdsClear(sdsId_magno);
+  sensorEnable(sensorId_magno);
+
   timestamp = osKernelGetTickCount();
   last_pred_ts = timestamp;
   timestamp += SENSOR_POLLING_INTERVAL;
@@ -240,43 +234,7 @@ void __NO_RETURN demo(void) {
 
   for(;;) {
     timestamp = osKernelGetTickCount();
-    flags = osThreadFlagsGet();
-    //(EVENT_MASK, osFlagsWaitAny, PRED_CLASSIFICATION_INTERVAL_IN_MSECS);
-    if ((flags & osFlagsError) == 0U) {
-      // Button pressed event
-      if (flags & EVENT_BUTTON) {
-        printf("Button pressed\r\n");
-        button_event();
-      }
-    }
-    // Collect sensor data.
-    if (sensorGetStatus(sensorId_accel).active != 0U) {
-      num = sizeof(sensorBuf) / sensorConfig_accel->sample_size;
-      num = sensorReadSamples(sensorId_accel, num, sensorBuf, sizeof(sensorBuf));
-      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
-        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_accel->sample_size * num);
-        QxFillSensorData(QXSENSOR_TYPE_ACCEL, sensorAxesBuf, num * sensorConfig_accel->sample_size);
-      }
-    }
 
-    if (sensorGetStatus(sensorId_gyro).active != 0U) {
-      num = sizeof(sensorBuf) / sensorConfig_gyro->sample_size;
-      num = sensorReadSamples(sensorId_gyro, num, sensorBuf, sizeof(sensorBuf));
-      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
-        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_gyro->sample_size * num);
-        QxFillSensorData(QXSENSOR_TYPE_GYRO, sensorAxesBuf, num * sensorConfig_gyro->sample_size);
-      }
-    }
-
-    if (sensorGetStatus(sensorId_magno).active != 0U) {
-      num = sizeof(sensorBuf) / sensorConfig_magno->sample_size;
-      num = sensorReadSamples(sensorId_magno, num, sensorBuf, sizeof(sensorBuf));
-      if ((num != 0U) && (num < SENSOR_BUF_SIZE)) {
-        memcpy(sensorAxesBuf, sensorBuf, sensorConfig_magno->sample_size * num);
-        QxFillSensorData(QXSENSOR_TYPE_MAG, sensorAxesBuf, num * sensorConfig_magno->sample_size);
-      }
-    }
-    
     // If it has been long enough, call QxClassify
     cur_ts = osKernelGetTickCount();
     if ((cur_ts < 20200) && ((cur_ts - last_pred_ts) >= PRED_CLASSIFICATION_INTERVAL_IN_MSECS)) {
@@ -286,8 +244,8 @@ void __NO_RETURN demo(void) {
       prediction = QxClassify();
       printf("TS: %d Prediction: %d - %s\r\n", cur_ts, prediction, qx_predict_classes[prediction]);
     }
-    timestamp += SENSOR_POLLING_INTERVAL;
+    timestamp += PRED_CLASSIFICATION_INTERVAL_IN_MSECS;
     osDelayUntil(timestamp);
   }
-  printf("All done\r\n");
+
 }
