@@ -152,24 +152,6 @@ static __NO_RETURN void read_sensors (void *argument) {
 }
 
 
-// SDS event callback
-static void sds_event_callback (sdsId_t id, uint32_t event, void *arg) {
-  (void)arg;
-
-  if ((event & SDS_EVENT_DATA_HIGH) != 0U) {
-    if (id == sdsId_accel) {
-      osThreadFlagsSet(thrId_demo, EVENT_DATA_ACCEL);
-    }
-    if (id == sdsId_gyro) {
-      osThreadFlagsSet(thrId_demo, EVENT_DATA_GYRO);
-    }
-    if (id == sdsId_magno) {
-      osThreadFlagsSet(thrId_demo, EVENT_DATA_MAGNO);
-    }
-  }
-}
-
-
 const char *qx_predict_classes[] = {"REST", "SHAKE", "WAVE"};
 
 // Sensor Demo
@@ -205,10 +187,6 @@ void __NO_RETURN demo(void) {
                             sizeof(sdsBuf_magno),
                             0U, SDS_THRESHOLD_MAGNO);
 
-  // Register SDS events
-  sdsRegisterEvents(sdsId_accel,     sds_event_callback, SDS_EVENT_DATA_HIGH, NULL);
-  sdsRegisterEvents(sdsId_gyro,      sds_event_callback, SDS_EVENT_DATA_HIGH, NULL);
-  sdsRegisterEvents(sdsId_magno,     sds_event_callback, SDS_EVENT_DATA_HIGH, NULL);
 
   // Create sensor thread
   thrId_read_sensors = osThreadNew(read_sensors, NULL, NULL);
