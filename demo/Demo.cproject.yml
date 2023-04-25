@@ -38,13 +38,8 @@ project:
         - file: ../sds/source/sdsio_socket.c
     - group: qeexo
       files:
-        - file: ./Qeexo/QxAutoMLInf.c
-        - file: ./Qeexo/QxAutoMLSensorConfigs.c
-        - file: ./Qeexo/QxClassifyEngine.c
-        - file: ./Qeexo/predict.c
-        - file: ./Qeexo/qxo_features.c
-        - file: ./Qeexo/fastmath.c
-        - file: ./Qeexo/mfccdata.c
+        - file: ./QxOS_Mutex.c
+        - file: ./libQxClassifyEngine.a
   # requires-layers:
   #   - Board
 

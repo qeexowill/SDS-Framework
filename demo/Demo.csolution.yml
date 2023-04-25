@@ -23,6 +23,7 @@ solution:
         - C-CPP:
           - -O1
           - -g
+          - -fshort-enums
         - C:
           - -std=c11
         - ASM:

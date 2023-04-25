@@ -28,7 +28,7 @@
 
 #include <string.h>
 
-#include "./Qeexo/QxAutoMLUser.h"
+#include "QxAutoMLUser.h"
 
 // Configuration
 #ifndef SDS_BUF_SIZE_ACCEL
